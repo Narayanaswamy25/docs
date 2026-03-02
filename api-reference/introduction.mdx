@@ -1,6 +1,6 @@
 ---
-title: API Introduction
-description: "Overview of the Skills API — authentication, errors, and rate limits"
+title: API Reference
+description: "Authentication, errors, rate limits — the stuff that applies to every endpoint."
 ---
 
 ## Base URL
@@ -9,26 +9,32 @@ description: "Overview of the Skills API — authentication, errors, and rate li
 http://localhost:5000
 ```
 
+Replace this with your deployed domain in production.
+
+---
+
 ## Authentication
 
-The API uses two authentication models:
+Most of the API is wide open — no tokens, no sign-in. The only exception is the admin routes.
 
-| Route group | Auth required | Method |
-|---|---|---|
-| `GET /api/skills/*` | ❌ Public | — |
-| `POST /api/selected-skills/*` | ❌ Public | — |
-| `GET /api/admin/*` | ✅ Required | `x-api-key` header |
+| Route | Auth? |
+|---|---|
+| `GET /api/skills/*` | No |
+| `GET /api/selected-skills/*` | No |
+| `POST /api/selected-skills` | No |
+| `DELETE /api/selected-skills/*` | No |
+| `GET /api/admin/*` | **Yes — API key required** |
 
-### Admin API Key
+### Admin API key
 
-All `/api/admin/*` routes require the `x-api-key` header:
+Pass your key in the `x-api-key` header:
 
 ```bash
 curl http://localhost:5000/api/admin/counts \
-  -H "x-api-key: supersecretadminkey123"
+  -H "x-api-key: your-admin-api-key"
 ```
 
-Missing or incorrect key returns:
+If the key is wrong or missing, you'll get:
 
 ```json
 {
@@ -36,21 +42,21 @@ Missing or incorrect key returns:
 }
 ```
 
-<Warning>
-  Store your `ADMIN_API_KEY` only in environment variables. Never commit it to source control or log it.
-</Warning>
+The key is set via the `ADMIN_API_KEY` environment variable. Don't hardcode it anywhere, don't log it, and definitely don't commit it.
 
 ---
 
-## Rate Limiting
+## Rate limiting
 
-| Scope | Limit | Window |
+There are three layers of rate limiting in place:
+
+| What's limited | Cap | Window |
 |---|---|---|
-| Global (all routes) | 100 requests / IP | 15 minutes |
+| Every route (global) | 100 requests / IP | 15 minutes |
 | `GET /api/skills/search` | 15 requests / IP | 1 minute |
-| Scraping detection | 30 requests / IP | 5 minutes rolling |
+| Scraping detection on `/api/skills/*` | 30 requests / IP | 5 minutes rolling |
 
-When exceeded:
+Hit any of these and you'll get a `429`:
 
 ```json
 {
@@ -60,53 +66,59 @@ When exceeded:
 
 ---
 
-## Error Codes
+## Errors
 
-| Code | Meaning |
+The API returns standard HTTP status codes. Here's what each one means in context:
+
+| Code | What happened |
 |---|---|
-| `400` | Validation failed — missing field, keyword too short, invalid page |
-| `403` | Missing or invalid admin API key |
-| `404` | Resource not found |
-| `409` | Conflict — duplicate selected skill |
-| `429` | Rate limit or scraping threshold exceeded |
-| `500` | Unexpected server error |
+| `400` | Something in your request didn't pass validation — missing field, keyword too short, page out of range |
+| `403` | You hit an admin route without a valid API key |
+| `404` | The resource you're referencing doesn't exist |
+| `409` | You tried to add a skill a user already has |
+| `429` | You've been rate limited or flagged for scraping |
+| `500` | Something unexpected broke on the server — check the logs |
 
-### Error response shape
+Error responses look like this:
 
 ```json
 {
   "success": false,
-  "message": "Human-readable description"
+  "message": "A clear explanation of what went wrong"
 }
 ```
 
-Or for search / validation errors:
+Search and validation errors use `error` instead of `message`:
 
 ```json
 {
-  "error": "Human-readable description"
+  "error": "Keyword must be at least 3 characters long."
 }
 ```
 
+Yeah, the inconsistency is a known thing. It'll get cleaned up.
+
 ---
 
-## Response shape — paginated list
+## Response shapes
+
+**Paginated list** (search results):
 
 ```json
 {
   "data": [...],
   "page": 1,
   "limit": 10,
-  "count": 5
+  "count": 3
 }
 ```
 
-## Response shape — single resource
+**Single resource** (create/delete):
 
 ```json
 {
   "success": true,
-  "message": "Operation successful",
+  "message": "Skill selected successfully",
   "data": { ... }
 }
 ```

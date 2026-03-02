@@ -1,15 +1,17 @@
 ---
 title: Quickstart
-description: "Get the Skills API running locally in under 5 minutes"
+description: "Get the server running locally — shouldn't take more than 5 minutes."
 ---
 
-## Prerequisites
+## Before you start
 
-- [Node.js](https://nodejs.org/) v18+
-- [MongoDB](https://www.mongodb.com/) running locally, or a connection string from [MongoDB Atlas](https://www.mongodb.com/atlas)
-- npm
+You'll need a few things installed:
 
-## 1. Clone the repository
+- [Node.js](https://nodejs.org/) v18 or higher
+- MongoDB — either [running locally](https://www.mongodb.com/try/download/community) or a free cluster on [MongoDB Atlas](https://www.mongodb.com/atlas)
+- npm (comes with Node)
+
+## 1. Clone the repo
 
 ```bash
 git clone https://github.com/your-org/skills-api.git
@@ -22,9 +24,9 @@ cd skills-api
 npm install
 ```
 
-## 3. Configure environment variables
+## 3. Set up your environment
 
-Create a `.env` file in the project root:
+Create a `.env` file in the root of the project. Here's what it should look like:
 
 ```bash .env
 PORT=5000
@@ -32,8 +34,10 @@ MONGO_URI=mongodb://127.0.0.1:27017/skills_db
 ADMIN_API_KEY=supersecretadminkey123
 ```
 
+Change `ADMIN_API_KEY` to something actually secret before you deploy anywhere.
+
 <Warning>
-  Never commit your `.env` file to version control. Make sure it is listed in `.gitignore`.
+  Don't commit your `.env` file. If it's not already in your `.gitignore`, add it now.
 </Warning>
 
 ## 4. Start the server
@@ -42,20 +46,24 @@ ADMIN_API_KEY=supersecretadminkey123
 npm start
 ```
 
-You should see:
+If everything's wired up correctly, you'll see:
 
 ```
 MongoDB connected
 Server running on port 5000
 ```
 
+If MongoDB isn't running you'll get a connection error here — start MongoDB first, then try again.
+
 ## 5. Make your first request
+
+Let's search for a skill to confirm the API is alive:
 
 ```bash
 curl "http://localhost:5000/api/skills/search?keyword=docker&page=1"
 ```
 
-Expected response:
+You should get something back like this:
 
 ```json
 {
@@ -73,15 +81,19 @@ Expected response:
 }
 ```
 
-## Project Structure
+If your database is empty, `data` will be an empty array — that's fine, it means the API is working.
+
+## Project structure
+
+Here's a quick map of where things live:
 
 ```
 .
-├── app.js                          # Entry point
+├── app.js                          # Entry point — routes, middleware, DB connection
 ├── middleware/
-│   ├── requireApiKey.js            # Admin API key guard
-│   ├── validate.js                 # Joi validation runner
-│   └── detectScraping.js           # Behavioral rate limiting
+│   ├── requireApiKey.js            # Blocks unauthenticated admin requests
+│   ├── validate.js                 # Runs Joi schemas against request bodies
+│   └── detectScraping.js           # Watches for suspiciously high request rates
 ├── models/
 │   ├── MasterSkill.js
 │   ├── SubSkill.js
@@ -93,16 +105,16 @@ Expected response:
 │   └── admin.routes.js
 ├── validations/
 │   └── selectedSkill.validation.js
-└── swagger.js
+└── swagger.js                      # Auto-generates /api-docs from JSDoc comments
 ```
 
-## Next Steps
+## What's next?
 
 <CardGroup cols={2}>
   <Card title="API Reference" icon="code" href="/api-reference/introduction">
-    Explore every endpoint in detail
+    All endpoints with full parameter and response docs
   </Card>
-  <Card title="Swagger UI" icon="browser" href="http://localhost:5000/api-docs">
-    Try requests interactively
+  <Card title="Try it in Swagger" icon="browser" href="http://localhost:5000/api-docs">
+    Hit live endpoints directly from your browser
   </Card>
 </CardGroup>

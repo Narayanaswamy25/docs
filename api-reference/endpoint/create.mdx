@@ -1,45 +1,46 @@
 ---
 title: Add Selected Skill
 api: POST /api/selected-skills
-description: "Add a skill to a user's profile"
+description: "Record that a user has selected a skill."
 ---
 
-## Overview
+Send a user ID and a skill ID, and this creates a record tying them together. That's it.
 
-Records that a user has selected a skill. A user cannot select the same skill twice — a second attempt returns `409 Conflict`.  
-Public endpoint — no authentication required.
+One rule: a user can't select the same skill twice. Try it and you'll get a `409`. This is enforced at both the application level and in the database with a compound unique index, so even concurrent requests won't create duplicates.
+
+No authentication needed.
 
 ---
 
 ## Request Body
 
 <ParamField body="user_id" type="string" required>
-  ID of the user selecting the skill.
+  The user who's selecting the skill.
 </ParamField>
 
 <ParamField body="skill_id" type="string" required>
-  ID of the skill being selected.
+  The skill being selected.
 </ParamField>
 
 <ParamField body="sub_skill_id" type="string" required>
-  Sub-skill category the skill belongs to.
+  The sub-skill category this skill belongs to. You can get this from the search endpoint.
 </ParamField>
 
 <ParamField body="master_skill_id" type="string" required>
-  Master skill category the skill belongs to.
+  The master skill category. Also available from search results.
 </ParamField>
 
 ---
 
 ## Response
 
-<ResponseField name="success" type="boolean">`true` when successfully created</ResponseField>
-<ResponseField name="message" type="string">Status message</ResponseField>
+<ResponseField name="success" type="boolean">`true` when the record is created</ResponseField>
+<ResponseField name="message" type="string">A short confirmation message</ResponseField>
 <ResponseField name="data" type="object">
-  The newly created selected skill record.
+  The newly created record. Hold onto the `selected_skill_id` — you'll need it if you want to delete this later.
 
-  <Expandable title="SelectedSkill object">
-    <ResponseField name="selected_skill_id" type="string">Auto-generated UUID for this record</ResponseField>
+  <Expandable title="The created record">
+    <ResponseField name="selected_skill_id" type="string">Auto-generated UUID. Save this.</ResponseField>
     <ResponseField name="user_id" type="string" />
     <ResponseField name="skill_id" type="string" />
     <ResponseField name="sub_skill_id" type="string" />
@@ -81,6 +82,7 @@ const data = await res.json();
 
 ```python Python
 import requests
+
 res = requests.post(
   "http://localhost:5000/api/selected-skills",
   json={
@@ -112,13 +114,13 @@ print(res.json())
 }
 ```
 
-```json 400 - Validation Error
+```json 400 - Missing field
 {
   "message": "\"skill_id\" is required"
 }
 ```
 
-```json 409 - Duplicate
+```json 409 - Already selected
 {
   "success": false,
   "message": "Skill already selected by this user"
@@ -129,8 +131,7 @@ print(res.json())
 ---
 
 <Info>
-**Duplicate prevention runs at two levels:**
+**Why does the 409 check happen twice?**
 
-1. **Application** — route checks for an existing `{ user_id, skill_id }` record before inserting
-2. **Database** — a compound unique index on `{ user_id, skill_id }` catches any race conditions
+The route checks for an existing `{ user_id, skill_id }` record before trying to insert. But just in case two requests land at exactly the same time, the database also has a compound unique index on those fields. The app-level check gives you the nicer error message. The DB-level index is the safety net.
 </Info>

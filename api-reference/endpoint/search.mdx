@@ -1,26 +1,23 @@
 ---
 title: Search Skills
 api: GET /api/skills/search
-description: "Search the skill catalogue by keyword"
+description: "Search the skill catalogue by keyword. No auth needed."
 ---
 
-## Overview
+This is probably the endpoint you'll use most. Type a keyword, get back a list of matching skills. Simple.
 
-Searches skills whose name matches the keyword. Results are paginated, capped at **10 per page**.  
-Public endpoint — no authentication required.
+Results are paginated — you get up to 10 per page, and you can go up to page 5. If you need to go deeper than that, you might want to use a more specific keyword instead.
 
 ---
 
 ## Query Parameters
 
 <ParamField query="keyword" type="string" required>
-  Search term to match against skill names.  
-  - Minimum **3 characters**  
-  - Cannot consist entirely of special characters (e.g. `***`, `...`)
+  What you're searching for. Has to be at least 3 characters — single letters and two-character queries are rejected. Also can't be entirely made up of special characters like `***` or `???`.
 </ParamField>
 
 <ParamField query="page" type="integer" default="1">
-  Page number. Accepted range: **1–5**.
+  Which page you want. Must be between 1 and 5. Defaults to 1 if you leave it out.
 </ParamField>
 
 ---
@@ -28,19 +25,19 @@ Public endpoint — no authentication required.
 ## Response
 
 <ResponseField name="data" type="array">
-  Array of matching skill objects.
+  The matching skills. Empty array if nothing matched — not a 404.
 
-  <Expandable title="Skill object">
-    <ResponseField name="skill_id" type="string">Unique skill identifier</ResponseField>
-    <ResponseField name="Skill" type="string">Display name of the skill</ResponseField>
-    <ResponseField name="sub_skill_id" type="string">Parent sub-skill ID</ResponseField>
-    <ResponseField name="master_skill_id" type="string">Parent master skill ID</ResponseField>
+  <Expandable title="Each skill looks like this">
+    <ResponseField name="skill_id" type="string">The skill's unique ID</ResponseField>
+    <ResponseField name="Skill" type="string">The name of the skill (yes, capital S — it's from the schema)</ResponseField>
+    <ResponseField name="sub_skill_id" type="string">Which sub-skill category this belongs to</ResponseField>
+    <ResponseField name="master_skill_id" type="string">Which master skill category this belongs to</ResponseField>
   </Expandable>
 </ResponseField>
 
-<ResponseField name="page" type="integer">Current page number</ResponseField>
-<ResponseField name="limit" type="integer">Results per page (always `10`)</ResponseField>
-<ResponseField name="count" type="integer">Number of results on this page</ResponseField>
+<ResponseField name="page" type="integer">The page you're on</ResponseField>
+<ResponseField name="limit" type="integer">How many results per page (always 10)</ResponseField>
+<ResponseField name="count" type="integer">How many results came back on this page</ResponseField>
 
 ---
 
@@ -56,11 +53,12 @@ curl "http://localhost:5000/api/skills/search?keyword=docker&page=1"
 const res = await fetch(
   "http://localhost:5000/api/skills/search?keyword=docker&page=1"
 );
-const data = await res.json();
+const { data, count } = await res.json();
 ```
 
 ```python Python
 import requests
+
 res = requests.get(
   "http://localhost:5000/api/skills/search",
   params={"keyword": "docker", "page": 1}
@@ -93,25 +91,25 @@ print(res.json())
 }
 ```
 
-```json 400 - Keyword Too Short
+```json 400 - Keyword too short
 {
   "error": "Keyword must be at least 3 characters long."
 }
 ```
 
-```json 400 - Invalid Page
+```json 400 - Page out of range
 {
   "error": "Page must be an integer between 1 and 5."
 }
 ```
 
-```json 400 - Dangerous Pattern
+```json 400 - Weird input
 {
   "error": "Invalid search pattern. Please use alphanumeric characters."
 }
 ```
 
-```json 429 - Rate Limited
+```json 429 - Slow down
 {
   "error": "Search rate limit exceeded. Please try again later."
 }
@@ -120,10 +118,12 @@ print(res.json())
 
 ---
 
-<Info>
-**Three layers of security on this endpoint:**
+## A note on security
 
-1. **Search-specific rate limit** — 15 requests/min/IP via `express-rate-limit`
-2. **Regex sanitization** — `escapeRegex()` neutralizes ReDoS vectors before the DB query
-3. **Scraping detection** — IPs making 30+ requests in 5 minutes are blocked with `429`
+This endpoint is public, so it has a few extra protections layered on:
+
+<Info>
+1. **Rate limit** — 15 requests per minute per IP. That's enough for normal use.
+2. **Regex sanitization** — your keyword is escaped before it hits the database query. This prevents [ReDoS attacks](https://owasp.org/www-community/attacks/ReDoS).
+3. **Scraping detection** — if an IP makes more than 30 requests in a 5-minute window, it gets blocked. The threshold is in `middleware/detectScraping.js` if you need to tune it.
 </Info>

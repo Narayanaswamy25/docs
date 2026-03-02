@@ -1,6 +1,6 @@
 ---
 title: Skills API
-description: "Infrastructure Skills Management API — built with Node.js, Express & MongoDB"
+description: "A simple, focused API for tracking infrastructure skills — who knows what, and how it all fits together."
 ---
 
 <img
@@ -14,26 +14,28 @@ description: "Infrastructure Skills Management API — built with Node.js, Expre
   alt="Skills API"
 />
 
-## What is the Skills API?
+## Hey, welcome 👋
 
-The **Skills API** is a REST API for managing infrastructure skills across your organisation. It lets you search a master skill catalogue, track which skills users have selected, and administer the catalogue through a protected admin interface.
+This is the Skills API — a lightweight REST API built with Node.js, Express, and MongoDB. It was built to solve one specific problem: keeping track of which infrastructure skills your team members have, and making that data easy to query and manage.
 
-## Data Model
+There's no bloat here. You get a skill catalogue you can search, a way to record which skills belong to which user, and a protected admin endpoint to keep an eye on the numbers.
 
-Skills are organised in a three-level hierarchy:
+## How skills are structured
+
+Skills live in a three-level hierarchy. Think of it like folders inside folders:
 
 <CardGroup cols={2}>
   <Card title="MasterSkill" icon="layer-group">
-    Top-level skill domain, e.g. *Cloud*, *Networking*, *DevOps*. Everything rolls up to a master skill.
+    The broadest category — things like *Cloud*, *Networking*, or *DevOps*. Everything rolls up to one of these.
   </Card>
   <Card title="SubSkill" icon="sitemap">
-    A grouping within a master skill, e.g. *AWS*, *Azure* under *Cloud*.
+    A more specific grouping inside a master skill. For example, *AWS* and *Azure* both live under *Cloud*.
   </Card>
   <Card title="Skill" icon="tag">
-    A concrete, leaf-level skill a user can select, e.g. *EC2*, *Lambda*, *S3*.
+    The actual thing a person knows — *EC2*, *Lambda*, *Terraform*, etc. This is what users select.
   </Card>
   <Card title="SelectedSkill" icon="circle-check">
-    Links a **user** to a **skill** they have claimed. Each user can select a given skill only once.
+    A record that says "this user has this skill." One user, one skill — no duplicates allowed.
   </Card>
 </CardGroup>
 
@@ -43,19 +45,21 @@ Skills are organised in a three-level hierarchy:
 http://localhost:5000
 ```
 
-## Explore
+Swap this for your deployed domain when you go to production.
+
+## Where do you want to start?
 
 <CardGroup cols={2}>
-  <Card title="Quickstart" icon="rocket" href="/quickstart">
-    Get the server running locally in under 5 minutes
+  <Card title="Get up and running" icon="rocket" href="/quickstart">
+    Server running locally in about 5 minutes
   </Card>
-  <Card title="API Reference" icon="code" href="/api-reference/introduction">
-    Browse all endpoints with live examples
+  <Card title="Browse the API" icon="code" href="/api-reference/introduction">
+    All endpoints, parameters, and response shapes
   </Card>
-  <Card title="Authentication" icon="lock" href="/api-reference/introduction#authentication">
-    Learn how admin routes are protected
+  <Card title="How auth works" icon="lock" href="/api-reference/introduction#authentication">
+    Most routes are public — here's what isn't
   </Card>
-  <Card title="Swagger UI" icon="browser" href="http://localhost:5000/api-docs">
-    Interactive docs powered by Swagger
+  <Card title="Try it live" icon="browser" href="http://localhost:5000/api-docs">
+    Swagger UI — hit real endpoints in the browser
   </Card>
 </CardGroup>

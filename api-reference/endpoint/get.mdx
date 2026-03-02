@@ -1,39 +1,38 @@
 ---
 title: Get Selected Skills
 api: GET /api/selected-skills/{user_id}
-description: "Retrieve all skills a user has selected"
+description: "Pull up everything a user has selected so far."
 ---
 
-## Overview
+Pass in a user ID, get back their full list of selected skills. If they haven't selected anything yet, you'll get an empty array — not an error.
 
-Returns every skill a user has added to their profile. Returns an empty array if none have been selected yet.  
-Public endpoint — no authentication required.
+No authentication needed.
 
 ---
 
 ## Path Parameters
 
 <ParamField path="user_id" type="string" required>
-  Unique identifier of the user.
+  The ID of the user you want to look up. This is whatever string you're using as a user identifier in your system.
 </ParamField>
 
 ---
 
 ## Response
 
-<ResponseField name="success" type="boolean">`true` on success</ResponseField>
-<ResponseField name="count" type="integer">Total selected skills returned</ResponseField>
+<ResponseField name="success" type="boolean">Always `true` when the request goes through fine</ResponseField>
+<ResponseField name="count" type="integer">How many skills this user has selected</ResponseField>
 <ResponseField name="data" type="array">
-  Array of selected skill records.
+  The list of selected skill records. Empty array if none yet.
 
-  <Expandable title="SelectedSkill object">
-    <ResponseField name="selected_skill_id" type="string">UUID for this selection record</ResponseField>
-    <ResponseField name="user_id" type="string">Owner of the selection</ResponseField>
-    <ResponseField name="skill_id" type="string">The selected skill</ResponseField>
-    <ResponseField name="sub_skill_id" type="string">Sub-skill category</ResponseField>
-    <ResponseField name="master_skill_id" type="string">Master skill category</ResponseField>
-    <ResponseField name="createdAt" type="string">ISO 8601 creation timestamp</ResponseField>
-    <ResponseField name="updatedAt" type="string">ISO 8601 update timestamp</ResponseField>
+  <Expandable title="Each record looks like this">
+    <ResponseField name="selected_skill_id" type="string">A UUID that uniquely identifies this selection. You'll need this if you want to delete it later.</ResponseField>
+    <ResponseField name="user_id" type="string">The user this belongs to</ResponseField>
+    <ResponseField name="skill_id" type="string">The skill that was selected</ResponseField>
+    <ResponseField name="sub_skill_id" type="string">The sub-skill category it sits in</ResponseField>
+    <ResponseField name="master_skill_id" type="string">The master skill category above that</ResponseField>
+    <ResponseField name="createdAt" type="string">When the skill was selected (ISO 8601)</ResponseField>
+    <ResponseField name="updatedAt" type="string">Last updated (ISO 8601)</ResponseField>
   </Expandable>
 </ResponseField>
 
@@ -51,11 +50,12 @@ curl "http://localhost:5000/api/selected-skills/user-123"
 const res = await fetch(
   "http://localhost:5000/api/selected-skills/user-123"
 );
-const data = await res.json();
+const { data, count } = await res.json();
 ```
 
 ```python Python
 import requests
+
 res = requests.get(
   "http://localhost:5000/api/selected-skills/user-123"
 )
@@ -83,7 +83,7 @@ print(res.json())
 }
 ```
 
-```json 200 - No skills selected
+```json 200 - User exists but hasn't selected anything
 {
   "success": true,
   "count": 0,
