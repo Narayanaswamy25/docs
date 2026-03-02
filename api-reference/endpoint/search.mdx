@@ -91,25 +91,25 @@ print(res.json())
 }
 ```
 
-```json 400 - Keyword too short
+```json 400
 {
   "error": "Keyword must be at least 3 characters long."
 }
 ```
 
-```json 400 - Page out of range
+```json 400
 {
   "error": "Page must be an integer between 1 and 5."
 }
 ```
 
-```json 400 - Weird input
+```json 400
 {
   "error": "Invalid search pattern. Please use alphanumeric characters."
 }
 ```
 
-```json 429 - Slow down
+```json 429
 {
   "error": "Search rate limit exceeded. Please try again later."
 }
