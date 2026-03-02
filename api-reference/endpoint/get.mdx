@@ -1,4 +1,93 @@
 ---
-title: 'Get Plants'
-openapi: 'GET /plants'
+title: Get Selected Skills
+api: GET /api/selected-skills/{user_id}
+description: "Retrieve all skills a user has selected"
 ---
+
+## Overview
+
+Returns every skill a user has added to their profile. Returns an empty array if none have been selected yet.  
+Public endpoint — no authentication required.
+
+---
+
+## Path Parameters
+
+<ParamField path="user_id" type="string" required>
+  Unique identifier of the user.
+</ParamField>
+
+---
+
+## Response
+
+<ResponseField name="success" type="boolean">`true` on success</ResponseField>
+<ResponseField name="count" type="integer">Total selected skills returned</ResponseField>
+<ResponseField name="data" type="array">
+  Array of selected skill records.
+
+  <Expandable title="SelectedSkill object">
+    <ResponseField name="selected_skill_id" type="string">UUID for this selection record</ResponseField>
+    <ResponseField name="user_id" type="string">Owner of the selection</ResponseField>
+    <ResponseField name="skill_id" type="string">The selected skill</ResponseField>
+    <ResponseField name="sub_skill_id" type="string">Sub-skill category</ResponseField>
+    <ResponseField name="master_skill_id" type="string">Master skill category</ResponseField>
+    <ResponseField name="createdAt" type="string">ISO 8601 creation timestamp</ResponseField>
+    <ResponseField name="updatedAt" type="string">ISO 8601 update timestamp</ResponseField>
+  </Expandable>
+</ResponseField>
+
+---
+
+## Examples
+
+<CodeGroup>
+
+```bash cURL
+curl "http://localhost:5000/api/selected-skills/user-123"
+```
+
+```js JavaScript
+const res = await fetch(
+  "http://localhost:5000/api/selected-skills/user-123"
+);
+const data = await res.json();
+```
+
+```python Python
+import requests
+res = requests.get(
+  "http://localhost:5000/api/selected-skills/user-123"
+)
+print(res.json())
+```
+
+</CodeGroup>
+
+<ResponseExample>
+```json 200
+{
+  "success": true,
+  "count": 2,
+  "data": [
+    {
+      "selected_skill_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "user_id": "user-123",
+      "skill_id": "sk-001",
+      "sub_skill_id": "sub-001",
+      "master_skill_id": "ms-001",
+      "createdAt": "2025-01-15T10:30:00.000Z",
+      "updatedAt": "2025-01-15T10:30:00.000Z"
+    }
+  ]
+}
+```
+
+```json 200 - No skills selected
+{
+  "success": true,
+  "count": 0,
+  "data": []
+}
+```
+</ResponseExample>

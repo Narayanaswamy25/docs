@@ -1,33 +1,112 @@
 ---
-title: 'Introduction'
-description: 'Example section for showcasing API endpoints'
+title: API Introduction
+description: "Overview of the Skills API — authentication, errors, and rate limits"
 ---
 
-<Note>
-  If you're not looking to build API reference documentation, you can delete
-  this section by removing the api-reference folder.
-</Note>
+## Base URL
 
-## Welcome
-
-There are two ways to build API documentation: [OpenAPI](https://mintlify.com/docs/api-playground/openapi/setup) and [MDX components](https://mintlify.com/docs/api-playground/mdx/configuration). For the starter kit, we are using the following OpenAPI specification.
-
-<Card
-  title="Plant Store Endpoints"
-  icon="leaf"
-  href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
->
-  View the OpenAPI specification file
-</Card>
+```
+http://localhost:5000
+```
 
 ## Authentication
 
-All API endpoints are authenticated using Bearer tokens and picked up from the specification file.
+The API uses two authentication models:
+
+| Route group | Auth required | Method |
+|---|---|---|
+| `GET /api/skills/*` | ❌ Public | — |
+| `POST /api/selected-skills/*` | ❌ Public | — |
+| `GET /api/admin/*` | ✅ Required | `x-api-key` header |
+
+### Admin API Key
+
+All `/api/admin/*` routes require the `x-api-key` header:
+
+```bash
+curl http://localhost:5000/api/admin/counts \
+  -H "x-api-key: supersecretadminkey123"
+```
+
+Missing or incorrect key returns:
 
 ```json
-"security": [
-  {
-    "bearerAuth": []
-  }
-]
+{
+  "message": "Access Denied"
+}
+```
+
+<Warning>
+  Store your `ADMIN_API_KEY` only in environment variables. Never commit it to source control or log it.
+</Warning>
+
+---
+
+## Rate Limiting
+
+| Scope | Limit | Window |
+|---|---|---|
+| Global (all routes) | 100 requests / IP | 15 minutes |
+| `GET /api/skills/search` | 15 requests / IP | 1 minute |
+| Scraping detection | 30 requests / IP | 5 minutes rolling |
+
+When exceeded:
+
+```json
+{
+  "error": "Too many requests. Please try again later."
+}
+```
+
+---
+
+## Error Codes
+
+| Code | Meaning |
+|---|---|
+| `400` | Validation failed — missing field, keyword too short, invalid page |
+| `403` | Missing or invalid admin API key |
+| `404` | Resource not found |
+| `409` | Conflict — duplicate selected skill |
+| `429` | Rate limit or scraping threshold exceeded |
+| `500` | Unexpected server error |
+
+### Error response shape
+
+```json
+{
+  "success": false,
+  "message": "Human-readable description"
+}
+```
+
+Or for search / validation errors:
+
+```json
+{
+  "error": "Human-readable description"
+}
+```
+
+---
+
+## Response shape — paginated list
+
+```json
+{
+  "data": [...],
+  "page": 1,
+  "limit": 10,
+  "count": 5
+}
+```
+
+## Response shape — single resource
+
+```json
+{
+  "success": true,
+  "message": "Operation successful",
+  "data": { ... }
+}
 ```

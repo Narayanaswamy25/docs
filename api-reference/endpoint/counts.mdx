@@ -1,0 +1,74 @@
+---
+title: Get Skill Counts
+api: GET /api/admin/counts
+description: "Get total document counts across master skills, sub-skills, and skills"
+---
+
+## Overview
+
+Returns total document counts for each skill collection. Useful for monitoring catalogue size and verifying data imports.
+
+<Warning>
+  This endpoint requires a valid **Admin API Key** in the `x-api-key` header. See [API Introduction](/api-reference/introduction#authentication) for details.
+</Warning>
+
+---
+
+## Headers
+
+<ParamField header="x-api-key" type="string" required>
+  Your admin API key — set via the `ADMIN_API_KEY` environment variable.
+</ParamField>
+
+---
+
+## Response
+
+<ResponseField name="master_skill_count" type="integer">Total master skill documents</ResponseField>
+<ResponseField name="sub_skill_count" type="integer">Total sub-skill documents</ResponseField>
+<ResponseField name="skill_count" type="integer">Total individual skill documents</ResponseField>
+
+---
+
+## Examples
+
+<CodeGroup>
+
+```bash cURL
+curl http://localhost:5000/api/admin/counts \
+  -H "x-api-key: supersecretadminkey123"
+```
+
+```js JavaScript
+const res = await fetch("http://localhost:5000/api/admin/counts", {
+  headers: { "x-api-key": "supersecretadminkey123" }
+});
+const data = await res.json();
+```
+
+```python Python
+import requests
+res = requests.get(
+  "http://localhost:5000/api/admin/counts",
+  headers={"x-api-key": "supersecretadminkey123"}
+)
+print(res.json())
+```
+
+</CodeGroup>
+
+<ResponseExample>
+```json 200
+{
+  "master_skill_count": 8,
+  "sub_skill_count": 34,
+  "skill_count": 210
+}
+```
+
+```json 403 - Unauthorized
+{
+  "message": "Access Denied"
+}
+```
+</ResponseExample>

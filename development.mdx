@@ -1,94 +1,84 @@
 ---
-title: 'Development'
-description: 'Preview changes locally to update your docs'
+title: Development
+description: "Running the Skills API locally for development"
 ---
 
-<Info>
-  **Prerequisites**:
-  - Node.js version 19 or higher
-  - A docs repository with a `docs.json` file
-</Info>
-
-Follow these steps to install and run Mintlify on your operating system.
-
-<Steps>
-<Step title="Install the Mintlify CLI">
+## Install dependencies
 
 ```bash
-npm i -g mint
+npm install
 ```
-</Step>
 
-<Step title="Preview locally">
+Key packages used:
 
-Navigate to your docs directory where your `docs.json` file is located, and run the following command:
+| Package | Purpose |
+|---|---|
+| `express` | HTTP server and routing |
+| `mongoose` | MongoDB ODM |
+| `joi` | Request body validation |
+| `uuid` | Generating `selected_skill_id` values |
+| `express-rate-limit` | Per-route and global rate limiting |
+| `swagger-jsdoc` + `swagger-ui-express` | Auto-generated API docs at `/api-docs` |
+| `dotenv` | Loading `.env` variables |
+| `helmet` *(recommended)* | Secure HTTP headers |
+| `cors` *(recommended)* | Cross-origin request control |
+
+## Environment Variables
+
+| Variable | Required | Description |
+|---|---|---|
+| `MONGO_URI` | ✅ | MongoDB connection string |
+| `ADMIN_API_KEY` | ✅ | Secret key for `/api/admin/*` routes |
+| `PORT` | ❌ | HTTP port (default: `5000`) |
+
+## Running the server
 
 ```bash
-mint dev
+# Development (with nodemon auto-restart)
+npm run dev
+
+# Production
+npm start
 ```
 
-A local preview of your documentation will be available at `http://localhost:3000`.
+## Swagger UI
 
-</Step>
-</Steps>
+While the server is running, visit:
 
-## Custom ports
+```
+http://localhost:5000/api-docs
+```
 
-By default, Mintlify uses port 3000. You can customize the port Mintlify runs on by using the `--port` flag. For example, to run Mintlify on port 3333, use this command:
+All routes are documented automatically from JSDoc comments in the route files.
+
+## Rate Limits
+
+| Scope | Limit | Window |
+|---|---|---|
+| Global — all routes | 100 requests / IP | 15 minutes |
+| `/api/skills/search` | 15 requests / IP | 1 minute |
+| Scraping detection | 30 requests / IP | 5 minutes (rolling) |
+
+## Adding a New Route
+
+1. Create your route file in `routes/`
+2. Register it in `app.js` with `app.use("/api/your-route", require("./routes/your-route"))`
+3. Add Joi validation schema in `validations/` if the route accepts a body
+4. Wire validation using the `validate` middleware:
+
+```js
+const validate = require("../middleware/validate");
+const { yourSchema } = require("../validations/your.validation");
+
+router.post("/", validate(yourSchema), async (req, res) => { ... });
+```
+
+5. Add JSDoc comments above the route for Swagger to pick up automatically
+
+## Linting
 
 ```bash
-mint dev --port 3333
+npm run lint
 ```
 
-If you attempt to run Mintlify on a port that's already in use, it will use the next available port:
-
-```md
-Port 3000 is already in use. Trying 3001 instead.
-```
-
-## Mintlify versions
-
-Please note that each CLI release is associated with a specific version of Mintlify. If your local preview does not align with the production version, please update the CLI:
-
-```bash
-npm mint update
-```
-
-## Validating links
-
-The CLI can assist with validating links in your documentation. To identify any broken links, use the following command:
-
-```bash
-mint broken-links
-```
-
-## Deployment
-
-If the deployment is successful, you should see the following:
-
-<Frame>
-  <img src="/images/checks-passed.png" alt="Screenshot of a deployment confirmation message that says All checks have passed." style={{ borderRadius: '0.5rem' }} />
-</Frame>
-
-## Code formatting
-
-We suggest using extensions on your IDE to recognize and format MDX. If you're a VSCode user, consider the [MDX VSCode extension](https://marketplace.visualstudio.com/items?itemName=unifiedjs.vscode-mdx) for syntax highlighting, and [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) for code formatting.
-
-## Troubleshooting
-
-<AccordionGroup>
-  <Accordion title='Error: Could not load the "sharp" module using the darwin-arm64 runtime'>
-
-    This may be due to an outdated version of node. Try the following:
-    1. Remove the currently-installed version of the CLI: `npm remove -g mint`
-    2. Upgrade to Node v19 or higher.
-    3. Reinstall the CLI: `npm i -g mint`
-  </Accordion>
-
-  <Accordion title="Issue: Encountering an unknown error">
-  
-    Solution: Go to the root of your device and delete the `~/.mintlify` folder. Then run `mint dev` again.
-  </Accordion>
-</AccordionGroup>
-
-Curious about what changed in the latest CLI version? Check out the [CLI changelog](https://www.npmjs.com/package/mintlify?activeTab=versions).
+Uses [ESLint](https://eslint.org/) with the project's `.eslintrc` config.

@@ -1,0 +1,129 @@
+---
+title: Search Skills
+api: GET /api/skills/search
+description: "Search the skill catalogue by keyword"
+---
+
+## Overview
+
+Searches skills whose name matches the keyword. Results are paginated, capped at **10 per page**.  
+Public endpoint — no authentication required.
+
+---
+
+## Query Parameters
+
+<ParamField query="keyword" type="string" required>
+  Search term to match against skill names.  
+  - Minimum **3 characters**  
+  - Cannot consist entirely of special characters (e.g. `***`, `...`)
+</ParamField>
+
+<ParamField query="page" type="integer" default="1">
+  Page number. Accepted range: **1–5**.
+</ParamField>
+
+---
+
+## Response
+
+<ResponseField name="data" type="array">
+  Array of matching skill objects.
+
+  <Expandable title="Skill object">
+    <ResponseField name="skill_id" type="string">Unique skill identifier</ResponseField>
+    <ResponseField name="Skill" type="string">Display name of the skill</ResponseField>
+    <ResponseField name="sub_skill_id" type="string">Parent sub-skill ID</ResponseField>
+    <ResponseField name="master_skill_id" type="string">Parent master skill ID</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="page" type="integer">Current page number</ResponseField>
+<ResponseField name="limit" type="integer">Results per page (always `10`)</ResponseField>
+<ResponseField name="count" type="integer">Number of results on this page</ResponseField>
+
+---
+
+## Examples
+
+<CodeGroup>
+
+```bash cURL
+curl "http://localhost:5000/api/skills/search?keyword=docker&page=1"
+```
+
+```js JavaScript
+const res = await fetch(
+  "http://localhost:5000/api/skills/search?keyword=docker&page=1"
+);
+const data = await res.json();
+```
+
+```python Python
+import requests
+res = requests.get(
+  "http://localhost:5000/api/skills/search",
+  params={"keyword": "docker", "page": 1}
+)
+print(res.json())
+```
+
+</CodeGroup>
+
+<ResponseExample>
+```json 200
+{
+  "data": [
+    {
+      "skill_id": "sk-001",
+      "Skill": "Docker",
+      "sub_skill_id": "sub-001",
+      "master_skill_id": "ms-001"
+    },
+    {
+      "skill_id": "sk-042",
+      "Skill": "Docker Compose",
+      "sub_skill_id": "sub-001",
+      "master_skill_id": "ms-001"
+    }
+  ],
+  "page": 1,
+  "limit": 10,
+  "count": 2
+}
+```
+
+```json 400 - Keyword Too Short
+{
+  "error": "Keyword must be at least 3 characters long."
+}
+```
+
+```json 400 - Invalid Page
+{
+  "error": "Page must be an integer between 1 and 5."
+}
+```
+
+```json 400 - Dangerous Pattern
+{
+  "error": "Invalid search pattern. Please use alphanumeric characters."
+}
+```
+
+```json 429 - Rate Limited
+{
+  "error": "Search rate limit exceeded. Please try again later."
+}
+```
+</ResponseExample>
+
+---
+
+<Info>
+**Three layers of security on this endpoint:**
+
+1. **Search-specific rate limit** — 15 requests/min/IP via `express-rate-limit`
+2. **Regex sanitization** — `escapeRegex()` neutralizes ReDoS vectors before the DB query
+3. **Scraping detection** — IPs making 30+ requests in 5 minutes are blocked with `429`
+</Info>

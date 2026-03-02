@@ -1,4 +1,136 @@
 ---
-title: 'Create Plant'
-openapi: 'POST /plants'
+title: Add Selected Skill
+api: POST /api/selected-skills
+description: "Add a skill to a user's profile"
 ---
+
+## Overview
+
+Records that a user has selected a skill. A user cannot select the same skill twice — a second attempt returns `409 Conflict`.  
+Public endpoint — no authentication required.
+
+---
+
+## Request Body
+
+<ParamField body="user_id" type="string" required>
+  ID of the user selecting the skill.
+</ParamField>
+
+<ParamField body="skill_id" type="string" required>
+  ID of the skill being selected.
+</ParamField>
+
+<ParamField body="sub_skill_id" type="string" required>
+  Sub-skill category the skill belongs to.
+</ParamField>
+
+<ParamField body="master_skill_id" type="string" required>
+  Master skill category the skill belongs to.
+</ParamField>
+
+---
+
+## Response
+
+<ResponseField name="success" type="boolean">`true` when successfully created</ResponseField>
+<ResponseField name="message" type="string">Status message</ResponseField>
+<ResponseField name="data" type="object">
+  The newly created selected skill record.
+
+  <Expandable title="SelectedSkill object">
+    <ResponseField name="selected_skill_id" type="string">Auto-generated UUID for this record</ResponseField>
+    <ResponseField name="user_id" type="string" />
+    <ResponseField name="skill_id" type="string" />
+    <ResponseField name="sub_skill_id" type="string" />
+    <ResponseField name="master_skill_id" type="string" />
+    <ResponseField name="createdAt" type="string">ISO 8601 timestamp</ResponseField>
+  </Expandable>
+</ResponseField>
+
+---
+
+## Examples
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST http://localhost:5000/api/selected-skills \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user_id": "user-123",
+    "skill_id": "sk-001",
+    "sub_skill_id": "sub-001",
+    "master_skill_id": "ms-001"
+  }'
+```
+
+```js JavaScript
+const res = await fetch("http://localhost:5000/api/selected-skills", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    user_id: "user-123",
+    skill_id: "sk-001",
+    sub_skill_id: "sub-001",
+    master_skill_id: "ms-001"
+  })
+});
+const data = await res.json();
+```
+
+```python Python
+import requests
+res = requests.post(
+  "http://localhost:5000/api/selected-skills",
+  json={
+    "user_id": "user-123",
+    "skill_id": "sk-001",
+    "sub_skill_id": "sub-001",
+    "master_skill_id": "ms-001"
+  }
+)
+print(res.json())
+```
+
+</CodeGroup>
+
+<ResponseExample>
+```json 201
+{
+  "success": true,
+  "message": "Skill selected successfully",
+  "data": {
+    "selected_skill_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "user_id": "user-123",
+    "skill_id": "sk-001",
+    "sub_skill_id": "sub-001",
+    "master_skill_id": "ms-001",
+    "createdAt": "2025-01-15T10:30:00.000Z",
+    "updatedAt": "2025-01-15T10:30:00.000Z"
+  }
+}
+```
+
+```json 400 - Validation Error
+{
+  "message": "\"skill_id\" is required"
+}
+```
+
+```json 409 - Duplicate
+{
+  "success": false,
+  "message": "Skill already selected by this user"
+}
+```
+</ResponseExample>
+
+---
+
+<Info>
+**Duplicate prevention runs at two levels:**
+
+1. **Application** — route checks for an existing `{ user_id, skill_id }` record before inserting
+2. **Database** — a compound unique index on `{ user_id, skill_id }` catches any race conditions
+</Info>
